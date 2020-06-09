@@ -23,6 +23,7 @@ import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import kotlinx.android.synthetic.main.activity_add_happy_place.*
 import learning.self.kotlin.happyplaces.R
+import learning.self.kotlin.happyplaces.database.DataBaseHandler
 import learning.self.kotlin.happyplaces.models.HappyPlaceModel
 import java.io.File
 import java.io.FileOutputStream
@@ -35,7 +36,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener{
 
     private var cal = Calendar.getInstance()
     private lateinit var dateSetListener: DatePickerDialog.OnDateSetListener
-    private var mImageToInternalStorage : Uri? = null
+    private var mSaveImageToInternalStorage : Uri? = null
     private var mLatitude : Double = 0.0
     private var mLongitude : Double = 0.0
 
@@ -57,6 +58,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener{
             updateDateInView()
         }
 
+        updateDateInView() //set the date when the activity is opened
         date_et.setOnClickListener(this)
         add_image_btn.setOnClickListener(this)
         save_btn.setOnClickListener(this)
@@ -90,7 +92,44 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener{
             }
 
             R.id.save_btn-> {
-                val newHappyPlace : HappyPlaceModel
+                when { //first check if all the edit texts are full
+                    title_et.text.isNullOrEmpty() -> {
+                        Toast.makeText(this, "Please enter a title", Toast.LENGTH_SHORT).show()
+                    }
+
+                    desc_et.text.isNullOrEmpty() -> {
+                        Toast.makeText(this, "Please enter a description", Toast.LENGTH_SHORT).show()
+                    }
+
+                    location_et.text.isNullOrEmpty() -> {
+                        Toast.makeText(this, "Please enter a location", Toast.LENGTH_SHORT).show()
+                    }
+
+                    mSaveImageToInternalStorage == null -> {
+                        Toast.makeText(this, "Please select an image", Toast.LENGTH_SHORT).show()
+                    }
+
+                    else -> {
+                        val newHappyPlace = HappyPlaceModel(
+                            0,
+                            title_et.text.toString(),
+                            mSaveImageToInternalStorage.toString(),
+                            desc_et.text.toString(),
+                            date_et.text.toString(),
+                            location_et.text.toString(),
+                            mLatitude,
+                            mLongitude
+                        )
+
+                        val dbHandler = DataBaseHandler(this)
+                        val addHappyPlaceResult = dbHandler.addHappyPlace(newHappyPlace)
+
+                        if(addHappyPlaceResult > 0){
+                            Toast.makeText(this,"You've just added a new happy place",Toast.LENGTH_SHORT).show()
+                            finish() //after adding a new place close this activity and go back to the mainactivity
+                        }
+                    }
+                }
             }
         }
     }
@@ -105,7 +144,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener{
                     try{
                         val selectedImageBitmap = MediaStore.Images.Media.getBitmap(this.contentResolver,contentURI)
 
-                        mImageToInternalStorage = saveImageToInternalStorage(selectedImageBitmap)
+                        mSaveImageToInternalStorage = saveImageToInternalStorage(selectedImageBitmap)
                         place_iv.setImageBitmap(selectedImageBitmap)
                     }catch (e : IOException){
                         e.printStackTrace()
@@ -114,7 +153,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener{
                 }
             } else if(requestCode == CAMERA){
                 val photo : Bitmap = data!!.extras!!.get("data") as Bitmap
-                mImageToInternalStorage = saveImageToInternalStorage(photo)
+                mSaveImageToInternalStorage = saveImageToInternalStorage(photo)
                 place_iv.setImageBitmap(photo)
             }
         }

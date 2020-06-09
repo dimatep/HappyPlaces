@@ -6,8 +6,8 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import learning.self.kotlin.happyplaces.models.HappyPlaceModel
 
-class DataBaseHandler(context: Context, factory: SQLiteDatabase.CursorFactory?) :
-    SQLiteOpenHelper (context, DATABASE_NAME, factory, DATABASE_VERSION){
+class DataBaseHandler(context: Context) :
+    SQLiteOpenHelper (context, DATABASE_NAME, null, DATABASE_VERSION){
 
     companion object{
         private val DATABASE_VERSION = 1
@@ -25,7 +25,7 @@ class DataBaseHandler(context: Context, factory: SQLiteDatabase.CursorFactory?) 
     }
 
     override fun onCreate(db: SQLiteDatabase?) {
-        val CREATE_EXERCISE_TABLE = ("CREATE TABLE " + TABLE_HAPPY_PLACES + "("
+        val CREATE_HAPPY_PLACE_TABLE = ("CREATE TABLE " + TABLE_HAPPY_PLACES + "("
                 + COLUMN_ID + " INTEGER PRIMARY KEY,"
                 + COLUMN_TITLE + " TEXT,"
                 + COLUMN_IMAGE + " TEXT,"
@@ -36,11 +36,11 @@ class DataBaseHandler(context: Context, factory: SQLiteDatabase.CursorFactory?) 
                 + COLUMN_LONGITUDE + " TEXT)")
 
         // CREATE TABLE history (_id INTEGER PRIMARY KEY, completed_date TEXT)
-        db?.execSQL(CREATE_EXERCISE_TABLE)
+        db?.execSQL(CREATE_HAPPY_PLACE_TABLE)
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
-        db?.execSQL("DROP TABLE IF EXISTS " + TABLE_HAPPY_PLACES)
+        db?.execSQL("DROP TABLE IF EXISTS $TABLE_HAPPY_PLACES")
         onCreate(db)
     }
 
@@ -66,7 +66,7 @@ class DataBaseHandler(context: Context, factory: SQLiteDatabase.CursorFactory?) 
         val happyPlacesList = ArrayList<String>()
         val db = this.readableDatabase //make the db readable
         // get all the date rows
-        val cursor = db.rawQuery("SELECT *TABLE_$TABLE_HAPPY_PLACES", null)
+        val cursor = db.rawQuery("SELECT * FROM $TABLE_HAPPY_PLACES", null)
 
 
 
