@@ -3,6 +3,7 @@ package learning.self.kotlin.happyplaces.database
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteOpenHelper
 import learning.self.kotlin.happyplaces.models.HappyPlaceModel
 
@@ -62,15 +63,40 @@ class DataBaseHandler(context: Context) :
         return result
     }
 
-    fun getAllHappyPlaces() : ArrayList<String>{
-        val happyPlacesList = ArrayList<String>()
+    fun getAllHappyPlaces() : ArrayList<HappyPlaceModel>{
+        val happyPlacesList = ArrayList<HappyPlaceModel>()
+        val selectQuery = "SELECT * FROM $TABLE_HAPPY_PLACES";
         val db = this.readableDatabase //make the db readable
-        // get all the date rows
-        val cursor = db.rawQuery("SELECT * FROM $TABLE_HAPPY_PLACES", null)
 
+        try{
+            // get all the date rows
+            val cursor = db.rawQuery(selectQuery, null)
 
+            //run through all the rows that we have in database
+            if(cursor.moveToFirst()){
+                do{
+                    val place = HappyPlaceModel(
+                        cursor.getInt(cursor.getColumnIndex(COLUMN_ID)),
+                        cursor.getString(cursor.getColumnIndex(COLUMN_TITLE)),
+                        cursor.getString(cursor.getColumnIndex(COLUMN_IMAGE)),
+                        cursor.getString(cursor.getColumnIndex(COLUMN_DESCRIPTION)),
+                        cursor.getString(cursor.getColumnIndex(COLUMN_DATE)),
+                        cursor.getString(cursor.getColumnIndex(COLUMN_LOCATION)),
+                        cursor.getDouble(cursor.getColumnIndex(COLUMN_LATITUDE)),
+                        cursor.getDouble(cursor.getColumnIndex(COLUMN_LONGITUDE))
+                    )
 
-        cursor.close()
+                    happyPlacesList.add(place)
+                }while (cursor.moveToNext())
+            }
+            cursor.close()
+
+        }catch (e : SQLiteException){
+            e.printStackTrace()
+            db.execSQL(selectQuery)
+            return ArrayList() //return empty arraylist
+        }
+
         return happyPlacesList
     }
 }

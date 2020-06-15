@@ -2,9 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="learning.self.kotlin.happyplaces">
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <application
         android:allowBackup="true"
@@ -13,10 +13,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".activities.AddHappyPlaceActivity"
+        <activity android:name=".activities.HappyPlaceDetailActivity"
+            android:label="HAPPY PLACE Details"
             android:screenOrientation="portrait"
-            android:label="Add Happy Place"
             android:theme="@style/CustomNoActionBarTheme"></activity>
+        <activity
+            android:name=".activities.AddHappyPlaceActivity"
+            android:label="Add Happy Place"
+            android:screenOrientation="portrait"
+            android:theme="@style/CustomNoActionBarTheme" />
         <activity android:name=".activities.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

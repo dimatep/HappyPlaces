@@ -6,6 +6,21 @@
     android:layout_height="match_parent"
     tools:context=".activities.MainActivity">
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:id="@+id/happy_places_list_rv"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="No Happy Places Found Yet. Kindly add one."
+        android:visibility="visible"
+        android:textSize="16sp"
+        android:id="@+id/no_happy_places_tv"/>
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
