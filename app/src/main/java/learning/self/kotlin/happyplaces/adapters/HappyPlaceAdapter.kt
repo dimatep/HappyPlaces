@@ -15,6 +15,7 @@ class HappyPlaceAdapter(
     private var list: ArrayList<HappyPlaceModel>)
     : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
+    private var itemOnClickListener : ItemOnClickListener? = null
 
     private class MyViewHolder(view: View) : RecyclerView.ViewHolder(view)
 
@@ -38,6 +39,21 @@ class HappyPlaceAdapter(
             holder.itemView.place_image_civ.setImageURI(Uri.parse(place.image))
             holder.itemView.title_tv.text = place.title
             holder.itemView.desc_tv.text = place.description
+
+            holder.itemView.setOnClickListener{
+                if(itemOnClickListener != null){
+                    itemOnClickListener!!.onClick(position, place)
+                }
+            }
         }
+    }
+
+    fun setOnClickListener(itemOnClickListener : ItemOnClickListener){
+        this.itemOnClickListener = itemOnClickListener
+
+    }
+
+    interface ItemOnClickListener{
+        fun onClick(position: Int, model: HappyPlaceModel)
     }
 }
