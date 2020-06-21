@@ -63,6 +63,39 @@ class DataBaseHandler(context: Context) :
         return result
     }
 
+    fun updateHappyPlace(happyPlace : HappyPlaceModel) : Int{
+        val db = this.writableDatabase
+
+        val values = ContentValues()
+        values.put(COLUMN_TITLE, happyPlace.title)
+        values.put(COLUMN_IMAGE, happyPlace.image)
+        values.put(COLUMN_DESCRIPTION, happyPlace.description)
+        values.put(COLUMN_DATE, happyPlace.date)
+        values.put(COLUMN_LOCATION, happyPlace.location)
+        values.put(COLUMN_LATITUDE, happyPlace.latitude)
+        values.put(COLUMN_LONGITUDE, happyPlace.longitude)
+
+        // Update row
+        val success = db.update(TABLE_HAPPY_PLACES,
+            values,
+            COLUMN_ID + "=" + happyPlace.id,
+            null)
+
+        db.close()
+        return success
+    }
+
+    fun deleteHappyPlace(happyPlace: HappyPlaceModel) : Int {
+        val db = this.writableDatabase
+
+        val success = db.delete(TABLE_HAPPY_PLACES,
+            COLUMN_ID + "=" + happyPlace.id,
+            null)
+
+        db.close()
+        return success
+    }
+
     fun getAllHappyPlaces() : ArrayList<HappyPlaceModel>{
         val happyPlacesList = ArrayList<HappyPlaceModel>()
         val selectQuery = "SELECT * FROM $TABLE_HAPPY_PLACES";

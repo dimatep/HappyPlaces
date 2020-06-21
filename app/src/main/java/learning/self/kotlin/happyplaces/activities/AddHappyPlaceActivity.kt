@@ -9,13 +9,21 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.graphics.Bitmap
+import android.location.Location
+import android.location.LocationManager
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Looper
 import android.provider.MediaStore
 import android.provider.Settings
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.gms.location.*
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.widget.Autocomplete
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
@@ -25,6 +33,7 @@ import kotlinx.android.synthetic.main.activity_add_happy_place.*
 import learning.self.kotlin.happyplaces.R
 import learning.self.kotlin.happyplaces.database.DataBaseHandler
 import learning.self.kotlin.happyplaces.models.HappyPlaceModel
+import learning.self.kotlin.happyplaces.utils.GetAdressFromLatLng
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -40,6 +49,10 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener{
     private var mLatitude : Double = 0.0
     private var mLongitude : Double = 0.0
 
+    private var mHappyPlaceDetails : HappyPlaceModel? = null
+
+    private lateinit var mFusedLocationClient : FusedLocationProviderClient
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_happy_place)
@@ -48,6 +61,17 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener{
         supportActionBar?.setDisplayHomeAsUpEnabled(true) //add back button to toolbar
         add_place_toolbar.setNavigationOnClickListener {
             onBackPressed()
+        }
+
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        if(!Places.isInitialized()){
+            Places.initialize(this@AddHappyPlaceActivity,resources.getString(R.string.google_maps_api_key))
+        }
+
+        if(intent.hasExtra(MainActivity.EXTRA_PLACE_DETAILS)){
+            mHappyPlaceDetails = intent.getParcelableExtra(MainActivity.EXTRA_PLACE_DETAILS) as HappyPlaceModel
+
         }
 
         dateSetListener = DatePickerDialog.OnDateSetListener {
@@ -59,9 +83,68 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener{
         }
 
         updateDateInView() //set the date when the activity is opened
+
+        if(mHappyPlaceDetails != null){
+            supportActionBar?.title = "Edit Happy Place"
+             title_et.setText(mHappyPlaceDetails!!.title)
+            desc_et.setText(mHappyPlaceDetails!!.description)
+            date_et.setText(mHappyPlaceDetails!!.date)
+            location_et.setText(mHappyPlaceDetails!!.location)
+            mLatitude = mHappyPlaceDetails!!.latitude
+            mLongitude = mHappyPlaceDetails!!.longitude
+
+            mSaveImageToInternalStorage = Uri.parse(mHappyPlaceDetails!!.image)
+            add_place_image_iv.setImageURI(mSaveImageToInternalStorage)
+            save_btn.text = "UPDATE"
+
+        }
+
         date_et.setOnClickListener(this)
         add_image_btn.setOnClickListener(this)
         save_btn.setOnClickListener(this)
+        location_et.setOnClickListener(this)
+        select_current_location_tv.setOnClickListener(this)
+    }
+
+    private val mLocationCallBack = object : LocationCallback(){
+        override fun onLocationResult(locationResult: LocationResult?) {
+            val mLastLocation : Location = locationResult!!.lastLocation
+            mLatitude = mLastLocation.latitude
+            mLongitude = mLastLocation.longitude
+
+            val addressTask = GetAdressFromLatLng(this@AddHappyPlaceActivity, mLatitude, mLongitude)
+            addressTask.setAddressListener(object : GetAdressFromLatLng.AddressListener{
+                override fun onAddressFound(address: String?) {
+                    location_et.setText(address)
+                }
+
+                override fun onError() {
+                    Toast.makeText(this@AddHappyPlaceActivity,
+                        "Error: Something went wrong",
+                        Toast.LENGTH_SHORT)
+                        .show()
+                }
+            })
+
+            addressTask.getAddress() // execute
+        }
+    }
+
+    private fun requestNewLocationData(){
+        var mLocationRequest = LocationRequest()
+        mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        mLocationRequest.interval = 0 //ms
+        mLocationRequest.numUpdates = 1
+
+        mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallBack, Looper.myLooper())
+    }
+
+    private fun isLocationEnabled() : Boolean {
+        val locationManager : LocationManager = getSystemService(Context.LOCATION_SERVICE)
+                as LocationManager
+
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
 
     override fun onClick(v: View?) {
@@ -111,7 +194,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener{
 
                     else -> {
                         val newHappyPlace = HappyPlaceModel(
-                            0,
+                            if(mHappyPlaceDetails == null ) 0 else mHappyPlaceDetails!!.id,
                             title_et.text.toString(),
                             mSaveImageToInternalStorage.toString(),
                             desc_et.text.toString(),
@@ -122,13 +205,63 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener{
                         )
 
                         val dbHandler = DataBaseHandler(this)
-                        val addHappyPlaceResult = dbHandler.addHappyPlace(newHappyPlace)
 
-                        if(addHappyPlaceResult > 0){
-                            setResult(Activity.RESULT_OK)
-                            finish() //after adding a new place close this activity and go back to the mainactivity
+                        if(mHappyPlaceDetails == null){
+                            val addHappyPlaceResult = dbHandler.addHappyPlace(newHappyPlace)
+                            if(addHappyPlaceResult > 0){
+                                setResult(Activity.RESULT_OK)
+                                finish() //after adding a new place close this activity and go back to the mainactivity
+                            }
+                        }else {
+                            val updateHappyPlaceResult = dbHandler.updateHappyPlace(newHappyPlace)
+                            if (updateHappyPlaceResult > 0) {
+                                setResult(Activity.RESULT_OK)
+                                finish() //after adding a new place close this activity and go back to the mainactivity
+                            }
                         }
                     }
+                }
+            }
+
+            R.id.location_et -> {
+                try{
+                    val fields = listOf(Place.Field.ID,
+                    Place.Field.NAME,
+                    Place.Field.LAT_LNG,
+                    Place.Field.ADDRESS)
+
+                    val intent = Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN,fields).build(this@AddHappyPlaceActivity)
+                    startActivityForResult(intent, PLACE_AUTOCOMPLETE_REQUEST_CODE)
+
+                }catch (e:Exception){
+                    e.printStackTrace()
+                }
+            }
+
+            R.id.select_current_location_tv -> {
+                if(!isLocationEnabled()){
+                    Toast.makeText(this, "Your location provider is turned off. Please turn it on",Toast.LENGTH_SHORT).show()
+
+                    val intent = Intent(Settings.ACTION_LOCALE_SETTINGS)
+                    startActivity(intent)
+                }else{
+                    Dexter.withActivity(this).withPermissions(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    ).withListener(object : MultiplePermissionsListener {
+                        override fun onPermissionsChecked(report: MultiplePermissionsReport?) {
+                            if(report!!.areAllPermissionsGranted()){
+                               requestNewLocationData()
+                            }
+                        }
+
+                        override fun onPermissionRationaleShouldBeShown(
+                            permissions: MutableList<PermissionRequest>?,
+                            token: PermissionToken?
+                        ) {
+                            showRationalDialogForPermissions()
+                        }
+                    }).onSameThread().check()
                 }
             }
         }
@@ -145,7 +278,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener{
                         val selectedImageBitmap = MediaStore.Images.Media.getBitmap(this.contentResolver,contentURI)
 
                         mSaveImageToInternalStorage = saveImageToInternalStorage(selectedImageBitmap)
-                        place_iv.setImageBitmap(selectedImageBitmap)
+                        add_place_image_iv.setImageBitmap(selectedImageBitmap)
                     }catch (e : IOException){
                         e.printStackTrace()
                         Toast.makeText(this@AddHappyPlaceActivity,"Failed to load the image form gallery",Toast.LENGTH_SHORT).show()
@@ -154,7 +287,12 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener{
             } else if(requestCode == CAMERA){
                 val photo : Bitmap = data!!.extras!!.get("data") as Bitmap
                 mSaveImageToInternalStorage = saveImageToInternalStorage(photo)
-                place_iv.setImageBitmap(photo)
+                add_place_image_iv.setImageBitmap(photo)
+            } else if(requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE){
+                val place : Place = Autocomplete.getPlaceFromIntent(data!!)
+                location_et.setText(place.address)
+                mLatitude = place.latLng!!.latitude
+                mLongitude = place.latLng!!.longitude
             }
         }
 
@@ -169,9 +307,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener{
             override fun onPermissionsChecked(report : MultiplePermissionsReport?) {
                 if(report!!.areAllPermissionsGranted()){
                     val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                    startActivityForResult(cameraIntent,
-                        CAMERA
-                    )
+                    startActivityForResult(cameraIntent, CAMERA)
                 }
             }
 
@@ -252,6 +388,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener{
     companion object{
         private const val GALLERY = 1
         private const val CAMERA = 2
-        private const val IMAGE_DIRECTORY = "HappyPlaecImages"
+        private const val IMAGE_DIRECTORY = "HappyPlaceImages"
+        private const val PLACE_AUTOCOMPLETE_REQUEST_CODE = 3
     }
 }

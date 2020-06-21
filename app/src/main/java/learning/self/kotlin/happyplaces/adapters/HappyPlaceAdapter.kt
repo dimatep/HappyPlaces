@@ -1,6 +1,8 @@
 package learning.self.kotlin.happyplaces.adapters
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
@@ -8,6 +10,9 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.happy_place_item.view.*
 import learning.self.kotlin.happyplaces.R
+import learning.self.kotlin.happyplaces.activities.AddHappyPlaceActivity
+import learning.self.kotlin.happyplaces.activities.MainActivity
+import learning.self.kotlin.happyplaces.database.DataBaseHandler
 import learning.self.kotlin.happyplaces.models.HappyPlaceModel
 
 class HappyPlaceAdapter(
@@ -45,6 +50,23 @@ class HappyPlaceAdapter(
                     itemOnClickListener!!.onClick(position, place)
                 }
             }
+        }
+    }
+
+    fun notifyEditItem(activity : Activity, position: Int, requestCode : Int){
+        val intent = Intent(context, AddHappyPlaceActivity::class.java)
+        intent.putExtra(MainActivity.EXTRA_PLACE_DETAILS, list[position])
+        activity.startActivityForResult(intent, requestCode)
+        notifyItemChanged(position)
+    }
+
+    fun notifyDeleteItem(position: Int){
+        val db = DataBaseHandler(context)
+        val isDeleted = db.deleteHappyPlace(list[position])
+
+        if(isDeleted > 0){
+            list.removeAt(position)
+            notifyItemChanged(position)
         }
     }
 

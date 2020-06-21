@@ -8,4 +8,5 @@
     <color name="image_border_color">#757575</color>
     <color name="desc_text_color">#606060</color>
     <color name="primary_text_color">#212121</color>
+    <color name="red">#D50000</color>
 </resources>

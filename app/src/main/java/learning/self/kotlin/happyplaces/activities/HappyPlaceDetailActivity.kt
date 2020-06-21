@@ -1,5 +1,6 @@
 package learning.self.kotlin.happyplaces.activities
 
+import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -36,6 +37,11 @@ class HappyPlaceDetailActivity : AppCompatActivity() {
             detail_description_tv.text = happyPlaceDetailModel.description
             detail_location_tv.text = happyPlaceDetailModel.location
 
+            view_on_map_btn.setOnClickListener {
+                val intent = Intent(this,MapActivity::class.java)
+                intent.putExtra(MainActivity.EXTRA_PLACE_DETAILS, happyPlaceDetailModel)
+                startActivity(intent)
+            }
         }
     }
 }

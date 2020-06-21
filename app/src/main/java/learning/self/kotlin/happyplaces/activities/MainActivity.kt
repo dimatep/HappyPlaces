@@ -6,12 +6,16 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_main.*
 import learning.self.kotlin.happyplaces.R
 import learning.self.kotlin.happyplaces.adapters.HappyPlaceAdapter
 import learning.self.kotlin.happyplaces.database.DataBaseHandler
 import learning.self.kotlin.happyplaces.models.HappyPlaceModel
+import learning.self.kotlin.happyplaces.utils.SwipeToDeleteCallBack
+import learning.self.kotlin.happyplaces.utils.SwipeToEditCallBack
 
 class MainActivity : AppCompatActivity() {
 
@@ -41,6 +45,31 @@ class MainActivity : AppCompatActivity() {
                 startActivity(intent)
             }
         })
+
+        // EDIT RIGHT SWEEP
+        val editSwipeHandler = object : SwipeToEditCallBack(this){
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val adapter = happy_places_list_rv.adapter as HappyPlaceAdapter
+                adapter.notifyEditItem(this@MainActivity,viewHolder.adapterPosition,
+                    ADD_PLACE_ACTIVITY_REQUEST_CODE)
+            }
+        }
+
+        val editItemTouchHelper = ItemTouchHelper(editSwipeHandler)
+        editItemTouchHelper.attachToRecyclerView(happy_places_list_rv)
+
+        // DELETE LEFT SWEEP
+        val deleteSwipeHandler = object : SwipeToDeleteCallBack(this){
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val adapter = happy_places_list_rv.adapter as HappyPlaceAdapter
+                adapter.notifyDeleteItem(viewHolder.adapterPosition)
+
+                getHappyPlaceFromDB()
+            }
+        }
+
+        val deleteItemTouchHelper = ItemTouchHelper(deleteSwipeHandler)
+        deleteItemTouchHelper.attachToRecyclerView(happy_places_list_rv)
     }
 
     private fun getHappyPlaceFromDB(){

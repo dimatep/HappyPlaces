@@ -96,10 +96,27 @@
                 android:id="@+id/location_et"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
                 android:hint="Location"
                 android:inputType="text"
                 android:textSize="16sp"/>
         </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/select_current_location_tv"
+            android:background="@drawable/shape_image_view_border"
+            android:gravity="center"
+            android:textColor="@color/colorAccent"
+            android:text="Select Current Location"
+            android:foreground="?attr/selectableItemBackground"
+            android:textSize="16sp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:padding="10dp"
+            android:layout_marginTop="5dp"/>
     </LinearLayout>
 
     <LinearLayout
@@ -112,7 +129,7 @@
             android:layout_width="0dp"
             android:layout_height="200dp"
             android:layout_weight="1"
-            android:id="@+id/place_iv"
+            android:id="@+id/add_place_image_iv"
             android:scaleType="centerCrop"
             android:background="@drawable/shape_image_view_border"
             android:layout_gravity="center"

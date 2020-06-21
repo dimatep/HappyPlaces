@@ -26,7 +26,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/detail_description_tv"
+        android:layout_marginTop="16dp"
         android:textSize="18sp"
+        android:padding="5dp"
         android:text="Description"/>
 
     <TextView
@@ -35,8 +37,22 @@
         android:id="@+id/detail_location_tv"
         android:textColor="@color/colorAccent"
         android:text="Location"
+        android:padding="5dp"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginTop="16dp"
         android:textSize="16sp" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:layout_gravity="center"
+        android:id="@+id/view_on_map_btn"
+        android:background="@drawable/save_btn_background"
+        android:text="VIEW ON MAP"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"/>
 </LinearLayout>
